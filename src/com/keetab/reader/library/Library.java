@@ -54,14 +54,8 @@ public class Library {
 		return null;
 	}
 	
-	public String[] getTitles() {
-		String[] titles = new String[publications.size()];
-		try {
-			for (int i=0; i < publications.size(); i++) {
-				titles[i] = publications.get(i).getEpubInfo().getTitle();
-			}
-		} catch (IOException e) {}
-		return titles;
+	public Publication[] asArray() {
+		return publications.toArray(new Publication[publications.size()]);
 	}
 	
 }

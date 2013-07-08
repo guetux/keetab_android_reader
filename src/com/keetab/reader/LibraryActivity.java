@@ -17,11 +17,8 @@ public class LibraryActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-				
-		String[] titles = library.getTitles();
 		
-		ArrayAdapter<String> adapter =
-				new ArrayAdapter<String>(this, R.layout.archive_item, titles);
+		PublicationAdapter adapter = new PublicationAdapter(this, library.asArray());
 		setListAdapter(adapter);
 	}
 

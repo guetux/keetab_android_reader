@@ -3,7 +3,7 @@
 
     <string name="app_name">keetab_reader</string>
     <string name="title_activity_library">LibraryActivity</string>
-    <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+	
+    <string name="cover">cover image</string>
 
 </resources>

@@ -3,6 +3,7 @@ package com.keetab.reader.library;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.zip.ZipInputStream;
 
 import nl.siegmann.epublib.domain.Book;
@@ -11,20 +12,22 @@ import nl.siegmann.epublib.epub.EpubReader;
 import org.json.simple.JSONAware;
 
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 
 import com.keetab.reader.ReaderContext;
 import com.keetab.reader.util.DirectoryManager;
 import com.keetab.reader.util.Unzipper;
 
 
-public class Publication {
+public class Publication implements Serializable {
 	
-	private AssetManager assets = ReaderContext.instance.getAssets();
+	private static final long serialVersionUID = 1L;
+	
 	private static final String LIBRARYDIR = "library";
 	
 	private String fileName;
-	private Book epubInfo;
-	private JSONAware bookData;
+	private transient Book epubInfo;
+	private transient JSONAware bookData;
 	
 	public Publication(String fileName) {
 		this.fileName = fileName;
@@ -37,7 +40,7 @@ public class Publication {
 	public Book getEpubInfo() throws IOException {
 		if (epubInfo == null) {
 			EpubReader reader = new EpubReader();
-			InputStream in = assets.open(LIBRARYDIR+"/"+fileName);
+			InputStream in = getAssets().open(LIBRARYDIR+"/"+fileName);
 			epubInfo = reader.readEpub(in);
 		}
 		return epubInfo;
@@ -51,7 +54,7 @@ public class Publication {
 	}
 	
 	public InputStream getInputStream() throws IOException {
-		return assets.open(LIBRARYDIR+"/"+fileName);
+		return getAssets().open(LIBRARYDIR+"/"+fileName);
 	}
 	
 	public File extract() throws IOException {
@@ -64,4 +67,13 @@ public class Publication {
 		}
 		return epubDir;
 	}
+	
+	public Bitmap getThumbnail(int width, int height) throws IOException {
+		return Thumbnailer.load(this, width, height);
+	}
+	
+	private AssetManager getAssets() {
+		return ReaderContext.instance.getAssets();
+	}
+	
 }

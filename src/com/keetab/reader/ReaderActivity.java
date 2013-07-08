@@ -3,6 +3,8 @@ package com.keetab.reader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.zip.ZipInputStream;
 
 import android.annotation.SuppressLint;
@@ -11,13 +13,22 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
+import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 
+import ch.bazaruto.Bazaruto;
+import ch.bazaruto.storage.FileStorage;
+
+import com.keetab.reader.library.LibraryController;
+import com.keetab.reader.library.Publication;
 import com.keetab.reader.util.DirectoryManager;
 import com.keetab.reader.util.MD5Sum;
 import com.keetab.reader.util.OnSwipeTouchListener;
@@ -26,7 +37,11 @@ import com.keetab.reader.util.Unzipper;
 
 public class ReaderActivity extends Activity {
 
+	Bazaruto server;
+	
 	WebView webView;
+	ImageView cover;
+	ProgressBar progress;
 
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
@@ -36,6 +51,8 @@ public class ReaderActivity extends Activity {
 
 
 		webView = (WebView)findViewById(R.id.webview);
+		cover = (ImageView)findViewById(R.id.cover);
+		progress = (ProgressBar)findViewById(R.id.progress);
 
 		WebSettings settings = webView.getSettings();
 		settings.setJavaScriptEnabled(true);
@@ -51,7 +68,22 @@ public class ReaderActivity extends Activity {
 			}
 		});
 
+		final Activity that = this;
 		webView.setWebViewClient(new WebViewClient() {
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				new Timer().schedule(new TimerTask() {
+					public void run() {
+						that.runOnUiThread(new Runnable() {
+							public void run() {
+								cover.setVisibility(View.INVISIBLE);
+								progress.setVisibility(View.INVISIBLE);
+							}
+						});
+					}
+				}, 300);
+			}
+			
 			@Override
 			public void onReceivedError(WebView view, int errorCode,
 					String description, String failingUrl) {
@@ -69,14 +101,36 @@ public class ReaderActivity extends Activity {
 			public void onSwipeLeft() {
 				webView.loadUrl("javascript:swipeLeft();");
 			}
+			
 		};
 
 		webView.setOnTouchListener(swipe);
 
 		checkReader();
+		startServer();
 
-		String data = (String)getIntent().getExtras().get("data");
-		webView.loadUrl("http://127.0.0.1:9090/reader/index.html?data=" + data);
+		Publication pub = (Publication)getIntent().getSerializableExtra("pub");
+		
+		String dataFile = pub.getFileName().replace(".epub", ".json");
+		String dataPath = "/library/" + dataFile;
+		
+		Display mDisplay= getWindowManager().getDefaultDisplay();
+		int width= mDisplay.getWidth();
+		int height= mDisplay.getHeight();
+		
+		try {
+			cover.setImageBitmap(pub.getThumbnail(width, height));
+		} catch (IOException e) {} 
+		
+		webView.loadUrl("http://127.0.0.1:9090/reader/index.html?data=" + dataPath);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (server != null) {
+			server.stop();
+		}
 	}
 
 	private void checkReader() {
@@ -95,6 +149,15 @@ public class ReaderActivity extends Activity {
 		}
 	}
 
+    private void startServer() {
+    	server = new Bazaruto();
+    	server.addController(LibraryController.class);
+    	File readerDir = DirectoryManager.getReaderDir();
+    	server.addStaticPath("^/reader/", new FileStorage(readerDir));
+    	server.enableRequestLogging();
+    	server.start(9090);
+    }
+	
 	private void extractReader() {
 		try {
 			File readerDir = DirectoryManager.getReaderDir();

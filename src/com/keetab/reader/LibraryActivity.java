@@ -4,7 +4,6 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.keetab.reader.library.Library;
@@ -18,7 +17,7 @@ public class LibraryActivity extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		PublicationAdapter adapter = new PublicationAdapter(this, library.asArray());
+		PublicationAdapter adapter = new PublicationAdapter(library.asArray());
 		setListAdapter(adapter);
 	}
 
@@ -26,12 +25,8 @@ public class LibraryActivity extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Publication pub = library.findByIndex(position);
-		
 		Intent intent = new Intent(this, ReaderActivity.class);
-		
-		String dataFile = pub.getFileName().replace(".epub", ".json");
-		String dataPath = "/library/" + dataFile;
-		intent.putExtra("data", dataPath);
+		intent.putExtra("pub", pub);
 		startActivity(intent);
 	}
 

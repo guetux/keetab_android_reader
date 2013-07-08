@@ -22,11 +22,17 @@ public class LibraryController {
 		String epub = fileName + ".epub";
 		Publication pub = library.findByFilename(epub);
 		if (pub  != null) {	
-			return new Response(
-				pub.bookData.toJSONString(),
-				NanoHTTPD.HTTP_OK, 
-				"application/json"
-			);
+			try {
+				return new Response(
+					pub.getBookData().toJSONString(),
+					NanoHTTPD.HTTP_OK, 
+					"application/json"
+				);
+			} catch(IOException e) {
+				return new Response(e.getMessage(), 
+						NanoHTTPD.HTTP_INTERNALERROR);
+			}
+			
     	} else {
     		return new Response("Epub not found", NanoHTTPD.HTTP_NOTFOUND);
     	}
@@ -37,7 +43,7 @@ public class LibraryController {
     	Publication pub = library.findByFilename(epub);
     	if (pub != null) {
     		try {
-    			File extractedDir = library.extract(pub);
+    			File extractedDir = pub.extract();
     			FileStorage storage = new FileStorage(extractedDir);
     			req.path = req.path.replaceAll("^/" + epub + "/", "");
     			return NanoHTTPD.serveFile(req, storage, true);

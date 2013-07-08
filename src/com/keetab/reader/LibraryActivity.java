@@ -32,7 +32,7 @@ public class LibraryActivity extends ListActivity {
 		
 		Intent intent = new Intent(this, ReaderActivity.class);
 		
-		String dataFile = pub.fileName.replace(".epub", ".json");
+		String dataFile = pub.getFileName().replace(".epub", ".json");
 		String dataPath = "/library/" + dataFile;
 		intent.putExtra("data", dataPath);
 		startActivity(intent);

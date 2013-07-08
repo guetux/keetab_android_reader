@@ -21,7 +21,7 @@ public class ReaderContext  extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
-        library = new Library(this);
+        library = new Library();
         startServer();
     }
     

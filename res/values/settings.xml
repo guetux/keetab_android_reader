@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="API_URL">http://sandbox.cp.kee-tab.com/api/v1/</string>
+    <string name="API_KEY">x1R09iNuUZGntztEdG4DTAMvbIKu0ltPzn3ppCme</string>
+</resources>

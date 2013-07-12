@@ -1,23 +1,40 @@
 package com.keetab.reader;
 
-import android.os.Bundle;
-import android.app.Activity;
-import android.os.Build;
+import java.util.List;
 
-public class StoreActivity extends Activity {
+import org.json.simple.JSONObject;
+
+import com.keetab.reader.api.StoreAPI;
+
+import android.os.Bundle;
+import android.app.ListActivity;
+
+public class StoreActivity extends ListActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
-		setupActionBar();
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		Thread loader = new Thread(new Runnable() {
+			public void run() {
+				loadProducts();
+			}
+		});
+		loader.start();
+
 	}
 	
-	private void setupActionBar() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			getActionBar().setDisplayHomeAsUpEnabled(true);
-		}
+	private void loadProducts() {
+		List<JSONObject> purchasables = StoreAPI.getPurchasable();
+		final StoreItemAdapter adapter = new StoreItemAdapter(purchasables);
+		
+		runOnUiThread(new Runnable() {
+			public void run() {
+				setListAdapter(adapter);
+			}
+		});
 	}
-
+	
 
 }

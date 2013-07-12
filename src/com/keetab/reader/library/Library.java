@@ -7,7 +7,7 @@ import java.util.List;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.keetab.reader.ReaderContext;
+import com.keetab.reader.AppContext;
 
 public class Library {
 
@@ -16,7 +16,7 @@ public class Library {
 	
 	public List<Publication> publications = new LinkedList<Publication>();
 	
-	private AssetManager assets = ReaderContext.instance.getAssets();
+	private AssetManager assets = AppContext.instance.getAssets();
 	
 	public Library() {
 		loadLibrary();

@@ -2,7 +2,6 @@ package com.keetab.reader.library;
 
 import java.io.File;
 
-import nl.siegmann.epublib.domain.Author;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Date;
 import nl.siegmann.epublib.domain.Date.Event;
@@ -14,12 +13,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
-public class EpubData {
+public class EpubJSONData {
 	
 	Book epub;
 	String fileName;
 	
-	public EpubData(Book epub, String fileName) {
+	public EpubJSONData(Book epub, String fileName) {
 		this.epub = epub;
 		this.fileName = fileName;
 	}
@@ -28,7 +27,7 @@ public class EpubData {
 		JSONObject meta = new JSONObject();
 		Metadata data = epub.getMetadata();
 		meta.put("title", epub.getTitle());
-		meta.put("creator", getAuthors(epub));
+		meta.put("creator", BookHelper.getAuthors(epub));
 		for (Date d: data.getDates()) {
 			if (d.getEvent() == Event.PUBLICATION) {
 				meta.put("publication", d.getValue());
@@ -39,16 +38,6 @@ public class EpubData {
 			}
 		}
 		return meta;
-	}
-	
-	private String getAuthors(Book epub) {
-		StringBuilder sb = new StringBuilder();
-		for (Author author : epub.getMetadata().getAuthors()) {
-			sb.append(author.toString());
-			sb.append(", ");
-		}
-		sb.delete(sb.length()-2, sb.length()-1);
-		return sb.toString();
 	}
 	
 	private JSONArray getComponents(Book epub) {		

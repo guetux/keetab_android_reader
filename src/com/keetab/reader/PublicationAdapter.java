@@ -1,21 +1,23 @@
 package com.keetab.reader;
 
 import java.io.IOException;
+import nl.siegmann.epublib.domain.Book;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.keetab.reader.library.BookHelper;
 import com.keetab.reader.library.Publication;
 
-public class PublicationAdapter extends BaseAdapter{
+public class PublicationAdapter extends BaseAdapter {
 
-	private ReaderContext ctx = ReaderContext.instance;
+	private AppContext ctx = AppContext.instance;
 	private Publication[] values;
 	private LayoutInflater inflater;
 		
@@ -40,32 +42,34 @@ public class PublicationAdapter extends BaseAdapter{
 	public long getItemId(int i) {
 		return i;
 	}
+	
+	@Override
+	public boolean isEnabled(int position) {
+		return true;
+	}
 
 	@Override
 	public View getView(int i, View convertView, ViewGroup parent) {
-		TextView view;
+		View vi = convertView;
 		Publication pub = values[i];
-		if (convertView == null) {
-			view = (TextView)inflater.inflate(R.layout.archive_item, parent, false);
-		} else {
-			view = (TextView)convertView;
-		}
+
+		if (convertView == null)
+			vi = inflater.inflate(R.layout.archive_item, parent, false);
+		
+		ImageView cover = (ImageView)vi.findViewById(R.id.cover);
+		TextView title = (TextView)vi.findViewById(R.id.title);
+		TextView description = (TextView)vi.findViewById(R.id.description);
 		
 		try {
-			view.setText(pub.getEpubInfo().getTitle());
-		} catch (IOException e) {
-			view.setText("Unknown");
-		}
+			Book info = pub.getEpubInfo();
+			title.setText(info.getTitle());
+			description.setText(BookHelper.getAuthors(info));
+			
+			Bitmap cov = pub.getThumbnail(40, 40);
+			cover.setImageBitmap(cov);
+		} catch (IOException e) {}
 		
-		try {
-			Bitmap cover = pub.getThumbnail(40, 40);
-			BitmapDrawable bd = new BitmapDrawable(ctx.getResources(), cover);
-			view.setCompoundDrawablesWithIntrinsicBounds(bd, null, null, null);
-		} catch (IOException e) {
-			view.setCompoundDrawablesWithIntrinsicBounds(R.drawable.archive_item, 0, 0, 0);
-		}
-		
-		return view;
+		return vi;
 		
 	}
 

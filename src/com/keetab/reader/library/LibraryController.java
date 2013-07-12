@@ -10,12 +10,12 @@ import ch.bazaruto.Request;
 import ch.bazaruto.Response;
 import ch.bazaruto.storage.FileStorage;
 
-import com.keetab.reader.ReaderContext;
+import com.keetab.reader.AppContext;
 
 @Route("^/library")
 public class LibraryController {
 
-	Library library = ReaderContext.library;
+	Library library = AppContext.library;
 	
 	@GET("/([\\w-]+)\\.json")
 	public Response pubJSON(Request req, String fileName) {

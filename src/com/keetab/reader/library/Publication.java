@@ -14,7 +14,7 @@ import org.json.simple.JSONAware;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
-import com.keetab.reader.ReaderContext;
+import com.keetab.reader.AppContext;
 import com.keetab.reader.util.DirectoryManager;
 import com.keetab.reader.util.Unzipper;
 
@@ -48,7 +48,7 @@ public class Publication implements Serializable {
 	
 	public JSONAware getBookData() throws IOException {
 		if (bookData == null) {
-			bookData = new EpubData(getEpubInfo(), fileName).parse();
+			bookData = new EpubJSONData(getEpubInfo(), fileName).parse();
 		}
 		return bookData;
 	}
@@ -73,7 +73,7 @@ public class Publication implements Serializable {
 	}
 	
 	private AssetManager getAssets() {
-		return ReaderContext.instance.getAssets();
+		return AppContext.instance.getAssets();
 	}
 	
 }

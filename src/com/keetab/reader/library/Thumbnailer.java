@@ -3,16 +3,15 @@ package com.keetab.reader.library;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.keetab.reader.ReaderContext;
+import com.keetab.reader.AppContext;
 
 import nl.siegmann.epublib.domain.Resource;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 
 public class Thumbnailer {
 	
-	static ReaderContext ctx = ReaderContext.instance;
+	static AppContext ctx = AppContext.instance;
 
 	
 	public static Bitmap load(Publication pub, int width, int height) 

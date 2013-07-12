@@ -5,9 +5,9 @@ import ch.bazaruto.Bazaruto;
 
 import com.keetab.reader.library.Library;
 
-public class ReaderContext  extends Application {
+public class AppContext  extends Application {
 
-	public static ReaderContext instance;
+	public static AppContext instance;
 	
 	public static Library library;
 	public static Bazaruto server;

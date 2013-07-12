@@ -2,11 +2,11 @@ package com.keetab.reader.util;
 
 import java.io.File;
 
-import com.keetab.reader.ReaderContext;
+import com.keetab.reader.AppContext;
 
 public class DirectoryManager {
 	
-	private static ReaderContext ctx = ReaderContext.instance;
+	private static AppContext ctx = AppContext.instance;
 	
 	public static File getLibraryCacheDir() {
 		File libraryCache = new File(ctx.getExternalCacheDir(), "library");

@@ -13,8 +13,8 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Display;
 import android.view.View;
+import android.view.Window;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -23,7 +23,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-
 import ch.bazaruto.Bazaruto;
 import ch.bazaruto.storage.FileStorage;
 
@@ -47,6 +46,7 @@ public class ReaderActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_reader);
 
 
@@ -102,10 +102,20 @@ public class ReaderActivity extends Activity {
 				webView.loadUrl("javascript:swipeLeft();");
 			}
 			
+			@Override
+			public void onSwipeDown() {
+				webView.loadUrl("javascript:swipeDown();");
+			}
+			
+			@Override
+			public void onSwipeUp() {
+				webView.loadUrl("javascript:swipeUp();");
+			}
+			
 		};
 
 		webView.setOnTouchListener(swipe);
-
+		
 		checkReader();
 		startServer();
 
@@ -114,9 +124,8 @@ public class ReaderActivity extends Activity {
 		String dataFile = pub.getFileName().replace(".epub", ".json");
 		String dataPath = "/library/" + dataFile;
 		
-		Display mDisplay= getWindowManager().getDefaultDisplay();
-		int width= mDisplay.getWidth();
-		int height= mDisplay.getHeight();
+		int width = cover.getWidth();
+		int height= cover.getHeight();
 		
 		try {
 			cover.setImageBitmap(pub.getThumbnail(width, height));
@@ -164,6 +173,7 @@ public class ReaderActivity extends Activity {
 			InputStream is = getAssets().open("reader.zip");
 			ZipInputStream rdr = new ZipInputStream(is);
 			Unzipper.unzipStream(rdr, readerDir);
+			webView.clearCache(true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

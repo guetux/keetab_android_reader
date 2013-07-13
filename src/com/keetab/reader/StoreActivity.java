@@ -7,26 +7,30 @@ import org.json.simple.JSONObject;
 import com.keetab.reader.api.StoreAPI;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ListView;
 import android.app.ListActivity;
+import android.content.Intent;
 
 public class StoreActivity extends ListActivity {
 
+	List<JSONObject> purchasables;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-		Thread loader = new Thread(new Runnable() {
+		new Thread(new Runnable() {
 			public void run() {
 				loadProducts();
 			}
-		});
-		loader.start();
+		}).start();
 
 	}
 	
 	private void loadProducts() {
-		List<JSONObject> purchasables = StoreAPI.getPurchasable();
+		purchasables = StoreAPI.getPurchasable();
 		final StoreItemAdapter adapter = new StoreItemAdapter(purchasables);
 		
 		runOnUiThread(new Runnable() {
@@ -34,6 +38,14 @@ public class StoreActivity extends ListActivity {
 				setListAdapter(adapter);
 			}
 		});
+	}
+	
+	@Override
+	protected void onListItemClick(ListView l, View v, int i, long id) {
+		Intent intent = new Intent(this, PurchaseActivity.class);
+		JSONObject publication = purchasables.get(i);
+		intent.putExtra("publication", publication);
+		startActivity(intent);
 	}
 	
 

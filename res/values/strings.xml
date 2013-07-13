@@ -5,4 +5,6 @@
     <string name="title_activity_store">Store</string>
     <string name="cover_image">cover image</string>
     <string name="store">Store</string>
+    <string name="cancel">Cancel</string>
+    <string name="purchase">Purchase</string>
 </resources>

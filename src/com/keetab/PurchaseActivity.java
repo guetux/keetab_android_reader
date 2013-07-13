@@ -1,13 +1,12 @@
 package com.keetab;
 import java.util.HashMap;
 
-import com.keetab.api.ApiClient;
-import com.keetab.reader.R;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import org.json.simple.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,13 +15,15 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.keetab.api.Cover;
+import com.keetab.api.DownloadPublication;
+import com.keetab.api.StoreAPI;
+import com.keetab.reader.R;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
 @SuppressWarnings("rawtypes")
 public class PurchaseActivity extends Activity {
 
-	private static String API_URL = ApiClient.API_URL;
-	private ImageLoader imageLoader = ImageLoader.getInstance();
-	
-	
 	HashMap pub;
 	
 	final String[] keys = {"author", "publisher", "rights", "description"};
@@ -67,8 +68,8 @@ public class PurchaseActivity extends Activity {
 		}
 		
 		String id = pub.get("id").toString();
-		String coverURL = API_URL + "/cover/" + id + "/100x150.png";
-		imageLoader.displayImage(coverURL, cover);
+		String coverURL = Cover.getCoverURL(id, 50, 50);
+		ImageLoader.getInstance().displayImage(coverURL, cover);
 		
 	}
 	
@@ -81,6 +82,34 @@ public class PurchaseActivity extends Activity {
 	}
 	
 	public void purchase(View view) {
-		Toast.makeText(this, "Kablam", Toast.LENGTH_LONG).show();
+		final String id = pub.get("id").toString();
+		final PurchaseActivity ctx = this;
+		
+		AsyncTask<String, Void, JSONObject> task = 
+			new AsyncTask<String, Void, JSONObject>() {
+				@Override
+				protected JSONObject doInBackground(String... params) {
+					return StoreAPI.purchase(params[0]);
+				}
+				
+				@Override
+				protected void onPostExecute(JSONObject purchase) {
+			        if (purchase.containsKey("error")) {
+			        	if (((Integer)purchase.get("status")).equals(402)) { 
+			        		Toast.makeText(ctx, "PAYMENT REQURED", Toast.LENGTH_LONG).show();
+			        	} else {
+			        		String error = purchase.get("error").toString();
+			        		Toast.makeText(ctx, error, Toast.LENGTH_LONG).show();
+			        	}
+			        } else {
+			            new DownloadPublication(purchase).run();
+			            Toast.makeText(ctx, "Download started", Toast.LENGTH_LONG).show();
+			        }
+				}
+			};
+        
+		task.execute(id);
+			
+        finish();
 	}
 }

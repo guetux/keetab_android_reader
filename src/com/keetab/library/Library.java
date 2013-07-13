@@ -1,39 +1,26 @@
 package com.keetab.library;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.content.res.AssetManager;
-import android.util.Log;
-
-import com.keetab.AppContext;
+import com.keetab.util.DirectoryManager;
 
 public class Library {
-
-	public static final String LIBRARY = "library";
-	public static final String TAG = "Library";
 	
 	public List<Publication> publications = new LinkedList<Publication>();
-	
-	private AssetManager assets = AppContext.instance.getAssets();
 	
 	public Library() {
 		loadLibrary();
 	}
 	
-	
 	private void loadLibrary() {
-		try {
-			String[] files = assets.list(LIBRARY);
-			for (String fileName : files) {
-				if (fileName.endsWith(".epub")) {
-					Publication pub = new Publication(fileName);
-					publications.add(pub);
-				}
+		String[] files = DirectoryManager.getLibraryDir().list();
+		for (String fileName : files) {
+			if (fileName.endsWith(".epub")) {
+				String id = fileName.substring(0, fileName.indexOf(".epub"));
+				Publication pub = new Publication(id);
+				publications.add(pub);
 			}
-		} catch (IOException e) {
-			Log.e(TAG, "Could not list library");
 		}
 	}
 	

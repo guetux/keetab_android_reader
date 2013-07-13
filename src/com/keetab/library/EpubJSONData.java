@@ -16,11 +16,11 @@ import org.json.simple.JSONObject;
 public class EpubJSONData {
 	
 	Book epub;
-	String fileName;
+	String id;
 	
-	public EpubJSONData(Book epub, String fileName) {
+	public EpubJSONData(Book epub, String id) {
 		this.epub = epub;
-		this.fileName = fileName;
+		this.id = id;
 	}
 	
 	private JSONObject getMetaData(Book epub) {
@@ -79,7 +79,7 @@ public class EpubJSONData {
 	}
 
 	public JSONAware parse() {
-		String location = "/library/"+ fileName + "/";
+		String location = "/library/"+ id + "/";
 		
 		File opfPath = new File(epub.getOpfResource().getHref());
 		File docPath = new File(location, opfPath.getParent());

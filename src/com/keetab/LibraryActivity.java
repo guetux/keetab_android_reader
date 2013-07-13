@@ -13,8 +13,8 @@ import com.keetab.library.Publication;
 import com.keetab.reader.R;
 
 public class LibraryActivity extends ListActivity {
-
-	Library library = AppContext.library;
+	
+	Library library = new Library();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

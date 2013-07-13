@@ -3,10 +3,6 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import com.keetab.api.ApiClient;
-import com.keetab.reader.R;
-import com.nostra13.universalimageloader.core.ImageLoader;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,10 +11,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.keetab.api.Cover;
+import com.keetab.reader.R;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
 
 public class StoreItemAdapter extends BaseAdapter {
-	
-	private static String API_URL = ApiClient.API_URL;
 	
 	private AppContext ctx = AppContext.instance;
 	private List<JSONObject> storeItems;
@@ -59,9 +57,8 @@ public class StoreItemAdapter extends BaseAdapter {
 		description.setText(item.get("description").toString());
 		
 		String id = item.get("id").toString();
-		String coverURL = API_URL + "/cover/" + id + "/50x50.png";
+		String coverURL = Cover.getCoverURL(id, 50, 50);
 		imageLoader.displayImage(coverURL, cover);
-		
 		return view;
 	}
 

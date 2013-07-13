@@ -26,6 +26,7 @@ import android.widget.ProgressBar;
 import ch.bazaruto.Bazaruto;
 import ch.bazaruto.storage.FileStorage;
 
+import com.keetab.api.Cover;
 import com.keetab.library.LibraryController;
 import com.keetab.library.Publication;
 import com.keetab.reader.R;
@@ -33,6 +34,7 @@ import com.keetab.util.DirectoryManager;
 import com.keetab.util.MD5Sum;
 import com.keetab.util.OnSwipeTouchListener;
 import com.keetab.util.Unzipper;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 
 public class ReaderActivity extends Activity {
@@ -127,10 +129,10 @@ public class ReaderActivity extends Activity {
 		
 		int width = cover.getWidth();
 		int height= cover.getHeight();
-		
-		try {
-			cover.setImageBitmap(pub.getThumbnail(width, height));
-		} catch (IOException e) {} 
+	
+		String id = pub.getMeta().get("id").toString();
+		String coverURL = Cover.getCoverURL(id, width, height);
+		ImageLoader.getInstance().displayImage(coverURL, cover);
 		
 		webView.loadUrl("http://127.0.0.1:9090/reader/index.html?data=" + dataPath);
 	}

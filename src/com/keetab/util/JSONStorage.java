@@ -9,8 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.keetab.AppContext;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -18,6 +16,8 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import com.keetab.AppContext;
 
 /**
  * A persistent storage for JSON Objects
@@ -121,7 +121,7 @@ public class JSONStorage {
     public JSONObject add(String type, JSONObject object) {
         String id;
         if (object.containsKey("id")) {
-            id = (String)object.get("id");
+            id = object.get("id").toString();
             if (get(type, id) != null) {
                 return null;
             }
@@ -157,7 +157,7 @@ public class JSONStorage {
         try {
         	if (!object.containsKey("id")) return false;
         	
-			String id = (String)object.get("id");
+			String id = object.get("id").toString();
 	    	ContentValues values = new ContentValues();
 	    	values.put(C_JSON, object.toString());
 
@@ -178,7 +178,7 @@ public class JSONStorage {
         try {
         	if (!object.containsKey("id")) return false;
 
-			String id = (String)object.get("id");    	
+			String id = object.get("id").toString();    	
 	    	ContentValues values = new ContentValues();
 	    	values.put(C_TYPE, type);
 	    	values.put(C_JSON, object.toString());
@@ -199,7 +199,7 @@ public class JSONStorage {
         try {
         	if (!object.containsKey("id")) return false;  
         	
-	        String id = (String)object.get("id");
+	        String id = object.get("id").toString();
 	        
 	        return db.delete(TABLE_NAME, C_ID+"=?", new String[] {id}) == 1;
     	} finally {

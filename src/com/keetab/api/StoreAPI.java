@@ -19,6 +19,13 @@ public class StoreAPI {
 	    return filterLibraryIDs(object);
 	}
 	
+	public static JSONObject purchase(String id) {
+        Parameters params = new Parameters();
+        params.put("product", id);
+        
+        return client.postJSON("/purchase/", params);
+	}
+	
     private static List<JSONObject> filterLibraryIDs (JSONArray objects) {
         List<JSONObject> filtered = new LinkedList<JSONObject>();
         for (Object object : objects) {

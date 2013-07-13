@@ -2,35 +2,31 @@ package com.keetab.library;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.util.zip.ZipInputStream;
 
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.epub.EpubReader;
 
 import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
 
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-
-import com.keetab.AppContext;
 import com.keetab.util.DirectoryManager;
-import com.keetab.util.Unzipper;
+import com.keetab.util.JSONStorage;
 
 
 public class Publication implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static final String LIBRARYDIR = "library";
-	
+	private String id;
 	private String fileName;
 	private transient Book epubInfo;
+	private transient JSONObject meta;
 	private transient JSONAware bookData;
 	
-	public Publication(String fileName) {
-		this.fileName = fileName;
+	public Publication(String id) {
+		this.id = id;
+		this.fileName = id + ".epub";
 	}
 	
 	public String getFileName() {
@@ -39,41 +35,27 @@ public class Publication implements Serializable {
 	
 	public Book getEpubInfo() throws IOException {
 		if (epubInfo == null) {
+			File libraryDir = DirectoryManager.getLibraryDir();
+			File epub = new File(libraryDir, fileName);
 			EpubReader reader = new EpubReader();
-			InputStream in = getAssets().open(LIBRARYDIR+"/"+fileName);
-			epubInfo = reader.readEpub(in);
+			epubInfo = reader.readEpubLazy(epub.toString(), "UTF-8");
 		}
 		return epubInfo;
 	}
 	
+	public JSONObject getMeta() {
+		if (meta == null) {
+			JSONStorage storage = new JSONStorage();
+			meta = storage.get("publications", id);
+		}
+		return meta;
+	}
+	
 	public JSONAware getBookData() throws IOException {
 		if (bookData == null) {
-			bookData = new EpubJSONData(getEpubInfo(), fileName).parse();
+			bookData = new EpubJSONData(getEpubInfo(), id).parse();
 		}
 		return bookData;
-	}
-	
-	public InputStream getInputStream() throws IOException {
-		return getAssets().open(LIBRARYDIR+"/"+fileName);
-	}
-	
-	public File extract() throws IOException {
-		File cacheDir = DirectoryManager.getLibraryCacheDir();
-		File epubDir = new File(cacheDir, fileName);
-		if (!epubDir.exists()) {
-			epubDir.mkdirs();
-			ZipInputStream zis =  new ZipInputStream(getInputStream());	
-			Unzipper.unzipStream(zis, epubDir);
-		}
-		return epubDir;
-	}
-	
-	public Bitmap getThumbnail(int width, int height) throws IOException {
-		return Thumbnailer.load(this, width, height);
-	}
-	
-	private AssetManager getAssets() {
-		return AppContext.instance.getAssets();
 	}
 	
 }

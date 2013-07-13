@@ -1,9 +1,9 @@
-package com.keetab.reader.library;
+package com.keetab.library;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 
 import nl.siegmann.epublib.domain.Resource;
 import android.graphics.Bitmap;

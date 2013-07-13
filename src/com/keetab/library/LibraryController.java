@@ -1,4 +1,4 @@
-package com.keetab.reader.library;
+package com.keetab.library;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import ch.bazaruto.Request;
 import ch.bazaruto.Response;
 import ch.bazaruto.storage.FileStorage;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 
 @Route("^/library")
 public class LibraryController {

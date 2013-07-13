@@ -1,4 +1,4 @@
-package com.keetab.reader.api;
+package com.keetab.api;
 
 import java.io.IOException;
 
@@ -19,7 +19,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 import com.keetab.reader.R;
 
 public class ApiClient extends DefaultHttpClient {

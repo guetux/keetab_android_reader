@@ -1,4 +1,4 @@
-package com.keetab.reader;
+package com.keetab;
 
 import java.io.IOException;
 import nl.siegmann.epublib.domain.Book;
@@ -12,8 +12,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.keetab.reader.library.BookHelper;
-import com.keetab.reader.library.Publication;
+import com.keetab.library.BookHelper;
+import com.keetab.library.Publication;
+import com.keetab.reader.R;
 
 public class PublicationAdapter extends BaseAdapter {
 

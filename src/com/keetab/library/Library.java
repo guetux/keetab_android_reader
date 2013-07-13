@@ -1,4 +1,4 @@
-package com.keetab.reader.library;
+package com.keetab.library;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -7,7 +7,7 @@ import java.util.List;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 
 public class Library {
 

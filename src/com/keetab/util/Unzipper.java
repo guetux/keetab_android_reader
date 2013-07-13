@@ -1,4 +1,4 @@
-package com.keetab.reader.util;
+package com.keetab.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

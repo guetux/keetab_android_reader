@@ -1,9 +1,9 @@
-package com.keetab.reader;
+package com.keetab;
 
 import android.app.Application;
 import ch.bazaruto.Bazaruto;
 
-import com.keetab.reader.library.Library;
+import com.keetab.library.Library;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;

@@ -1,4 +1,4 @@
-package com.keetab.reader.api;
+package com.keetab.api;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.keetab.reader.util.JSONStorage;
+import com.keetab.util.JSONStorage;
 
 public class StoreAPI {
 

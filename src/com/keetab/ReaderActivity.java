@@ -1,4 +1,4 @@
-package com.keetab.reader;
+package com.keetab;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,12 +26,13 @@ import android.widget.ProgressBar;
 import ch.bazaruto.Bazaruto;
 import ch.bazaruto.storage.FileStorage;
 
-import com.keetab.reader.library.LibraryController;
-import com.keetab.reader.library.Publication;
-import com.keetab.reader.util.DirectoryManager;
-import com.keetab.reader.util.MD5Sum;
-import com.keetab.reader.util.OnSwipeTouchListener;
-import com.keetab.reader.util.Unzipper;
+import com.keetab.library.LibraryController;
+import com.keetab.library.Publication;
+import com.keetab.reader.R;
+import com.keetab.util.DirectoryManager;
+import com.keetab.util.MD5Sum;
+import com.keetab.util.OnSwipeTouchListener;
+import com.keetab.util.Unzipper;
 
 
 public class ReaderActivity extends Activity {

@@ -1,4 +1,4 @@
-package com.keetab.reader;
+package com.keetab;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -8,8 +8,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 
-import com.keetab.reader.library.Library;
-import com.keetab.reader.library.Publication;
+import com.keetab.library.Library;
+import com.keetab.library.Publication;
+import com.keetab.reader.R;
 
 public class LibraryActivity extends ListActivity {
 

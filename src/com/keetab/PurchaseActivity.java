@@ -1,8 +1,8 @@
-package com.keetab.reader;
+package com.keetab;
 import java.util.HashMap;
 
+import com.keetab.api.ApiClient;
 import com.keetab.reader.R;
-import com.keetab.reader.api.ApiClient;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import android.app.Activity;

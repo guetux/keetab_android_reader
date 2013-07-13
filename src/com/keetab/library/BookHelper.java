@@ -1,4 +1,4 @@
-package com.keetab.reader.library;
+package com.keetab.library;
 
 import nl.siegmann.epublib.domain.Author;
 import nl.siegmann.epublib.domain.Book;

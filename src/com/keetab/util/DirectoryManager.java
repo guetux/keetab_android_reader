@@ -1,8 +1,8 @@
-package com.keetab.reader.util;
+package com.keetab.util;
 
 import java.io.File;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 
 public class DirectoryManager {
 	

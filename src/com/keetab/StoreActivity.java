@@ -1,10 +1,11 @@
-package com.keetab.reader;
+package com.keetab;
 
 import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import com.keetab.reader.api.StoreAPI;
+import com.keetab.api.StoreAPI;
+import com.keetab.reader.R;
 
 import android.os.Bundle;
 import android.view.View;

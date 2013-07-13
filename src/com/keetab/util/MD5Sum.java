@@ -1,4 +1,4 @@
-package com.keetab.reader.util;
+package com.keetab.util;
 
 import java.io.InputStream;
 import java.security.MessageDigest;

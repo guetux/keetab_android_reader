@@ -1,4 +1,4 @@
-package com.keetab.reader.util;
+package com.keetab.util;
 
 import android.content.Context;
 import android.view.GestureDetector;

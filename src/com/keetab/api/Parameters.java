@@ -1,4 +1,4 @@
-package com.keetab.reader.api;
+package com.keetab.api;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;

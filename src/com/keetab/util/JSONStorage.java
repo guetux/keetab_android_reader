@@ -1,4 +1,4 @@
-package com.keetab.reader.util;
+package com.keetab.util;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.keetab.reader.AppContext;
+import com.keetab.AppContext;
 
 import android.content.ContentValues;
 import android.content.Context;

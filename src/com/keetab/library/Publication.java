@@ -1,4 +1,4 @@
-package com.keetab.reader.library;
+package com.keetab.library;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +14,9 @@ import org.json.simple.JSONAware;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
-import com.keetab.reader.AppContext;
-import com.keetab.reader.util.DirectoryManager;
-import com.keetab.reader.util.Unzipper;
+import com.keetab.AppContext;
+import com.keetab.util.DirectoryManager;
+import com.keetab.util.Unzipper;
 
 
 public class Publication implements Serializable {

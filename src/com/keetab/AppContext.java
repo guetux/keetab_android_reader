@@ -1,7 +1,6 @@
 package com.keetab;
 
 import android.app.Application;
-import ch.bazaruto.Bazaruto;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -10,7 +9,6 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 public class AppContext  extends Application {
 
 	public static AppContext instance;
-	public static Bazaruto server;
 	
     @Override
     public void onCreate() {

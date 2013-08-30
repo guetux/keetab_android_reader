@@ -9,6 +9,7 @@ import org.readium.sdk.android.Package;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.webkit.WebViewClient;
 
 import com.keetab.library.Publication;
 import com.keetab.reader.R;
+import com.keetab.util.TouchListener;
 
 
 public class ReaderActivity extends Activity {
@@ -61,8 +63,38 @@ public class ReaderActivity extends Activity {
 		webview.getSettings().setPluginState(WebSettings.PluginState.ON);
 		webview.setWebViewClient(new EpubWebViewClient());
 		webview.setWebChromeClient(new EpubWebChromeClient());
+		webview.setOnTouchListener(new SwipeActions(this));
 		//webview.addJavascriptInterface(new EpubInterface(), "LauncherUI");
 	}
+	
+	
+	public class SwipeActions extends TouchListener {
+		
+		public SwipeActions(Context ctx) {
+			super(ctx);
+		}
+
+		public void onSwipeRight() {
+			openPageRight();
+		}
+		
+		public void rightTap() {
+			openPageRight();
+		}
+		
+		public void onSwipeLeft() {
+			openPageLeft();
+		}
+		
+		public void leftTap() {
+			openPageLeft();
+		}
+		
+		public void onSwipeDown() {}
+		
+		public void onSwipeUp() {}
+	};
+	
 	
 	
 	private void bookmarkCurrentPage() {

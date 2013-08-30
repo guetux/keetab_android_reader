@@ -1,20 +1,22 @@
 package com.keetab.util;
 
 import android.content.Context;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 
-public abstract class OnSwipeTouchListener implements OnTouchListener {
+public abstract class TouchListener implements OnTouchListener {
     private static final int SWIPE_MIN_DISTANCE = 150;
     private static final int SWIPE_THRESHOLD_VELOCITY = 1000;
     
     private final GestureDetector gestureDetector;
     		
-    public OnSwipeTouchListener(Context ctx) {
-    	gestureDetector= new GestureDetector(ctx, new GestureListener());
+    public TouchListener(Context ctx) {
+    	gestureDetector= new GestureDetector(ctx, new GestureListener(ctx));
     }
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
@@ -22,6 +24,16 @@ public abstract class OnSwipeTouchListener implements OnTouchListener {
     }
 
     private final class GestureListener extends SimpleOnGestureListener {
+    	
+    	int width;
+    	
+    	public GestureListener(Context ctx) {
+        	WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
+        	Display display = wm.getDefaultDisplay();
+        	width = display.getWidth();
+    	}
+    	
+    	
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, 
         		float velocityX, float velocityY) {
@@ -45,11 +57,29 @@ public abstract class OnSwipeTouchListener implements OnTouchListener {
         	}
             return true;
         }
+        
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+        	
+        	if (e.getX() < 40) {
+        		leftTap();
+        	}
+        	
+        	if (e.getX() > (width-40)) {
+        		rightTap();
+        	}
+
+        	
+        	return super.onSingleTapUp(e);
+        }
     }
 
     abstract public void onSwipeLeft();
     abstract public void onSwipeRight();
     abstract public void onSwipeDown();
     abstract public void onSwipeUp();
+    
+    abstract public void leftTap();
+    abstract public void rightTap();
 
 }

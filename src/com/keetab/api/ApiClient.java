@@ -20,7 +20,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.keetab.AppContext;
-import com.keetab.reader.R;
+import com.keetab.R;
 
 public class ApiClient extends DefaultHttpClient {
 	

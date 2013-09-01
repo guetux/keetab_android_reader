@@ -10,7 +10,6 @@ import android.widget.ListView;
 
 import com.keetab.library.Library;
 import com.keetab.library.Publication;
-import com.keetab.reader.R;
 
 public class LibraryActivity extends ListActivity {
 	

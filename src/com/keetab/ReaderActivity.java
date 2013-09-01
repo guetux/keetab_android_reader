@@ -3,57 +3,94 @@ package com.keetab;
 import java.io.ByteArrayInputStream;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.readium.sdk.android.Container;
 import org.readium.sdk.android.Package;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageButton;
 
 import com.keetab.library.Publication;
-import com.keetab.reader.R;
+import com.keetab.model.ViewerSettings;
 import com.keetab.util.TouchListener;
 
 
-public class ReaderActivity extends Activity {
+public class ReaderActivity extends FragmentActivity implements ViewerSettingsDialog.OnViewerSettingsChange {
 	private static final String TAG = "ReaderActivity";
 	private static final String ASSET_PREFIX = "file:///android_asset/readium-shared-js/";
 	private static final String READER_SKELETON = "file:///android_asset/readium-shared-js/reader.html";
 
 	WebView webview;
+	ImageButton settingsButton;
 	
 	Package pckg;
-
+	ViewerSettings viewerSettings;
+	
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_reader);
 
 		webview = (WebView)findViewById(R.id.webview);
 		initWebView();
 	
-		
-		Publication pub = (Publication)getIntent().getSerializableExtra("pub");	
-		Container container = pub.getContainer();
-		pckg = container.getDefaultPackage();
-		
+	    Publication pub = (Publication)getIntent().getSerializableExtra("pub"); 
+	    Container container = pub.getContainer();
+	    pckg = container.getPackages().get(0);
+	    
 		webview.loadUrl(READER_SKELETON);
+		viewerSettings = new ViewerSettings(false, 100, 20);
 	}
 	
+	public void showSettings() {
+	    FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        DialogFragment dialog = new ViewerSettingsDialog(this, viewerSettings);
+        dialog.show(fm, "dialog");
+        fragmentTransaction.commit();
+	}
 	
+    @Override
+    public void onViewerSettingsChange(ViewerSettings viewerSettings) {
+        updateSettings(viewerSettings);
+    }
+	
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+       getMenuInflater().inflate(R.menu.reader, menu);
+       return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.show_settings) {
+            showSettings();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
+    }
+   
+   
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initWebView() {
 		webview.getSettings().setJavaScriptEnabled(true);
@@ -95,8 +132,6 @@ public class ReaderActivity extends Activity {
 		public void onSwipeUp() {}
 	};
 	
-	
-	
 	private void bookmarkCurrentPage() {
 		loadJS("window.LauncherUI.getBookmarkData(ReadiumSDK.reader.bookmarkCurrentPage());");
 	}
@@ -119,16 +154,15 @@ public class ReaderActivity extends Activity {
 		loadJSOnReady("ReadiumSDK.reader.openBook("+packageData+", "+openPageRequest+");");
 	}
 	
-	private void initSettings() {
-		JSONObject json = new JSONObject();
-		try {
-			json.put("isSyntheticSpread", false);
-			json.put("fontSize", 100);
-			json.put("columnGap", 20);
-		} catch (JSONException fuckoff) {}
-		
-		loadJSOnReady("ReadiumSDK.reader.updateSettings("+json.toString()+");");
-	}
+    private void updateSettings(ViewerSettings viewerSettings) {
+        Log.i(TAG, "viewerSettings: "+viewerSettings);
+        this.viewerSettings = viewerSettings;
+        try {
+            loadJSOnReady("ReadiumSDK.reader.updateSettings("+viewerSettings.toJSON().toString()+");");
+        } catch (JSONException e) {
+            Log.e(TAG, ""+e.getMessage(), e);
+        }
+    }
 	
 	private void openContentUrl(String href, String baseUrl) {
 		loadJSOnReady("ReadiumSDK.reader.openContentUrl(\""+href+"\", \""+baseUrl+"\");");
@@ -161,8 +195,8 @@ public class ReaderActivity extends Activity {
         public void onPageFinished(WebView view, String url) {
         	Log.i(TAG, "onPageFinished: "+url);
         	if (url.equals(READER_SKELETON)) {
-        		openBook(pckg.toJSON());
-        		initSettings();
+        	    openBook(pckg.toJSON());
+        	    updateSettings(viewerSettings);
         	}
         }
         

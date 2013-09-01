@@ -1,6 +1,7 @@
 package com.keetab.util;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -28,11 +29,9 @@ public abstract class TouchListener implements OnTouchListener {
     	int width;
     	
     	public GestureListener(Context ctx) {
-        	WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-        	Display display = wm.getDefaultDisplay();
-        	width = display.getWidth();
+        	DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+        	width = metrics.widthPixels;
     	}
-    	
     	
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, 
@@ -61,11 +60,11 @@ public abstract class TouchListener implements OnTouchListener {
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
         	
-        	if (e.getX() < 40) {
+        	if (e.getX() < 40 && e.getY() > 60) {
         		leftTap();
         	}
         	
-        	if (e.getX() > (width-40)) {
+        	if (e.getX() > (width-40) && e.getY() > 60) {
         		rightTap();
         	}
 

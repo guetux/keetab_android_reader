@@ -9,7 +9,7 @@
         android:layout_height="150dp"
         android:contentDescription="@string/cover_image"
         android:scaleType="centerInside"
-        android:src="@drawable/archive_item" />
+        android:src="@drawable/book" />
 
     <TableLayout
         android:id="@+id/table"

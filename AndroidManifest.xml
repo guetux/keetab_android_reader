@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.keetab.reader"
+    package="com.keetab"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -28,6 +28,7 @@
         </activity>
         <activity
             android:name="com.keetab.ReaderActivity"
+            android:icon="@drawable/book"
             android:configChanges="orientation|keyboardHidden|screenSize">
         </activity>
         <activity

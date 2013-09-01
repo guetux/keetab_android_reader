@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.keetab.api.Cover;
 import com.keetab.library.Publication;
-import com.keetab.reader.R;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 public class PublicationAdapter extends BaseAdapter {

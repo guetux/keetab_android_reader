@@ -12,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.keetab.api.Cover;
-import com.keetab.reader.R;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 

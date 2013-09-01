@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.keetab.api.Cover;
 import com.keetab.api.DownloadPublication;
 import com.keetab.api.StoreAPI;
-import com.keetab.reader.R;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 @SuppressWarnings("rawtypes")

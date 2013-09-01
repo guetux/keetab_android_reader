@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.ListView;
 
 import com.keetab.api.StoreAPI;
-import com.keetab.reader.R;
 
 public class StoreActivity extends ListActivity {
 

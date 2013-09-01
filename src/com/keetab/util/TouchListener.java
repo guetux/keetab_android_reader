@@ -2,13 +2,11 @@ package com.keetab.util;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.WindowManager;
 
 public abstract class TouchListener implements OnTouchListener {
     private static final int SWIPE_MIN_DISTANCE = 150;
@@ -59,17 +57,18 @@ public abstract class TouchListener implements OnTouchListener {
         
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-        	
-        	if (e.getX() < 40 && e.getY() > 60) {
+        	if (e.getX() < 40) {
         		leftTap();
+        		return true;
         	}
         	
-        	if (e.getX() > (width-40) && e.getY() > 60) {
+        	if (e.getX() > (width-40)) {
         		rightTap();
+        		return true;
         	}
 
         	
-        	return super.onSingleTapUp(e);
+        	return false;
         }
     }
 

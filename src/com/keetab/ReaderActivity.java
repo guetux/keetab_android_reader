@@ -3,17 +3,22 @@ package com.keetab;
 import java.io.ByteArrayInputStream;
 
 import org.json.JSONException;
+import org.json.simple.JSONObject;
 import org.readium.sdk.android.Container;
 import org.readium.sdk.android.Package;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,12 +31,15 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 
+import com.keetab.api.Cover;
 import com.keetab.library.Publication;
 import com.keetab.model.ViewerSettings;
 import com.keetab.util.TouchListener;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
 
-public class ReaderActivity extends FragmentActivity implements ViewerSettingsDialog.OnViewerSettingsChange {
+public class ReaderActivity extends ActionBarActivity implements ViewerSettingsDialog.OnViewerSettingsChange {
 	private static final String TAG = "ReaderActivity";
 	private static final String ASSET_PREFIX = "file:///android_asset/readium-shared-js/";
 	private static final String READER_SKELETON = "file:///android_asset/readium-shared-js/reader.html";
@@ -47,6 +55,7 @@ public class ReaderActivity extends FragmentActivity implements ViewerSettingsDi
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		//this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.activity_reader);
 
 		webview = (WebView)findViewById(R.id.webview);
@@ -55,6 +64,20 @@ public class ReaderActivity extends FragmentActivity implements ViewerSettingsDi
 	    Publication pub = (Publication)getIntent().getSerializableExtra("pub"); 
 	    Container container = pub.getContainer();
 	    pckg = container.getPackages().get(0);
+	    
+	    JSONObject meta = pub.getMeta();
+	    setTitle(meta.get("title").toString());
+	    
+	    final ActionBar actionBar = getSupportActionBar();
+	    String id = meta.get("id").toString();
+        String coverURL = Cover.getCoverURL(id, 50, 50);
+        ImageLoader.getInstance().loadImage(coverURL, new SimpleImageLoadingListener() {
+            @Override
+            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                BitmapDrawable drawable = new BitmapDrawable(getResources(), loadedImage);
+                actionBar.setIcon(drawable);
+            }
+        });
 	    
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);

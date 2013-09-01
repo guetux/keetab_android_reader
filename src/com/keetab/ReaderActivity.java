@@ -1,20 +1,25 @@
 package com.keetab;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.simple.JSONObject;
 import org.readium.sdk.android.Container;
 import org.readium.sdk.android.Package;
+import org.readium.sdk.android.components.navigation.NavigationElement;
+import org.readium.sdk.android.components.navigation.NavigationPoint;
+import org.readium.sdk.android.components.navigation.NavigationTable;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
@@ -23,17 +28,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.keetab.api.Cover;
 import com.keetab.library.Publication;
+import com.keetab.model.BookmarkDatabase;
+import com.keetab.model.Page;
+import com.keetab.model.PaginationInfo;
 import com.keetab.model.ViewerSettings;
+import com.keetab.util.StringListAdapter;
 import com.keetab.util.TouchListener;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
@@ -46,7 +59,9 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 
 	WebView webview;
 	ImageButton settingsButton;
+	SlidingMenu tocMenu;
 	
+	Container container;
 	Package pckg;
 	ViewerSettings viewerSettings;
 	
@@ -62,7 +77,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		initWebView();
 	
 	    Publication pub = (Publication)getIntent().getSerializableExtra("pub"); 
-	    Container container = pub.getContainer();
+	    container = pub.getContainer();
 	    pckg = container.getPackages().get(0);
 	    
 	    JSONObject meta = pub.getMeta();
@@ -79,9 +94,63 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
             }
         });
 	    
+        
+        tocMenu = new SlidingMenu(this);
+        tocMenu.setMode(SlidingMenu.LEFT);
+        tocMenu.setTouchmodeMarginThreshold(40);
+//        menu.setShadowWidthRes(R.dimen.shadow_width);
+//        menu.setShadowDrawable(R.drawable.shadow);
+//        menu.setBehindOffsetRes(R.dimen.slidingmenu_offset);
+        tocMenu.setBehindOffset(300);
+        tocMenu.setFadeDegree(0.35f);
+        tocMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+        tocMenu.setMenu(R.layout.toc_list);
+        
+        ListView tocList = (ListView)tocMenu.findViewById(R.id.tocList);
+        NavigationTable toc = pckg.getTableOfContents();
+        setListViewContent(tocList, toc);
+        
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);
 	}
+	
+	protected void setListViewContent(ListView view, final NavigationTable navigationTable) {
+        List<String> list = flatNavigationTable(navigationTable, new ArrayList<String>(), "");
+        final List<NavigationElement> navigationElements = flatNavigationTable(navigationTable, new ArrayList<NavigationElement>());
+        StringListAdapter bookListAdapter = new StringListAdapter(this, list);
+        view.setAdapter(bookListAdapter);
+        view.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+                    long arg3) {
+                NavigationElement navigation = navigationElements.get(arg2);
+                if (navigation instanceof NavigationPoint) {
+                    NavigationPoint point = (NavigationPoint) navigation;
+                    String content = point.getContent();
+                    String sourceHref = navigationTable.getSourceHref();
+                    openContentUrl(content, sourceHref);
+                    tocMenu.showContent();
+                }
+            }
+        });
+    }
+
+    private List<String> flatNavigationTable(NavigationElement parent, List<String> list, String shift) {
+        String newShift = shift + "   ";
+        for (NavigationElement ne : parent.getChildren()) {
+            list.add(shift + ne.getTitle()+" ("+ne.getChildren().size()+")");
+            flatNavigationTable(ne, list, newShift);
+        }
+        return list;
+    }
+
+    private List<NavigationElement> flatNavigationTable(NavigationElement parent, List<NavigationElement> list) {
+        for (NavigationElement ne : parent.getChildren()) {
+            list.add(ne);
+            flatNavigationTable(ne, list);
+        }
+        return list;
+    }
 	
 	public void showSettings() {
 	    FragmentManager fm = getSupportFragmentManager();
@@ -124,7 +193,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		webview.setWebViewClient(new EpubWebViewClient());
 		webview.setWebChromeClient(new EpubWebChromeClient());
 		webview.setOnTouchListener(new SwipeActions(this));
-		//webview.addJavascriptInterface(new EpubInterface(), "LauncherUI");
+		webview.addJavascriptInterface(new EpubInterface(), "LauncherUI");
 	}
 	
 	
@@ -262,22 +331,12 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	}
     
 	public class EpubInterface {
-		/*
 		@JavascriptInterface
 		public void onPaginationChanged(String currentPagesInfo) {
 			try {
 				PaginationInfo paginationInfo = PaginationInfo.fromJson(currentPagesInfo);
 				List<Page> openPages = paginationInfo.getOpenPages();
-				if (!openPages.isEmpty()) {
-					final Page page = openPages.get(0);
-					runOnUiThread(new Runnable() {
-						public void run() {
-							pageInfo.setText(getString(R.string.page_x_of_y,
-									page.getSpineItemPageIndex() + 1,
-									page.getSpineItemPageCount()));
-						}
-					});
-				}
+				// Thank you but we're not interested
 			} catch (JSONException e) {
 				Log.e(TAG, ""+e.getMessage(), e);
 			}
@@ -285,10 +344,10 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		
 		@JavascriptInterface
 		public void getBookmarkData(final String bookmarkData) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(WebViewActivity.this).
+			AlertDialog.Builder builder = new AlertDialog.Builder(ReaderActivity.this).
 					setTitle(R.string.add_bookmark);
 	        
-	        final EditText editText = new EditText(WebViewActivity.this);
+	        final EditText editText = new EditText(ReaderActivity.this);
 	        editText.setId(android.R.id.edit);
 	        editText.setHint(R.string.title);
 	        builder.setView(editText);
@@ -299,7 +358,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 					if (which == DialogInterface.BUTTON_POSITIVE) {
 						String title = editText.getText().toString();
 						try {
-							JSONObject bookmarkJson = new JSONObject(bookmarkData);
+							org.json.JSONObject bookmarkJson = new org.json.JSONObject(bookmarkData);
 							BookmarkDatabase.getInstance().addBookmark(container.getName(), title,
 									bookmarkJson.getString("idref"), bookmarkJson.getString("contentCFI"));
 						} catch (JSONException e) {
@@ -311,7 +370,6 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	        builder.setNegativeButton(android.R.string.cancel, null);
 	        builder.show();
 		}
-		*/
 	}
 
 }

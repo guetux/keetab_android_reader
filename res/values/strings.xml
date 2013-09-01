@@ -8,6 +8,8 @@
     <string name="cancel">Cancel</string>
     <string name="purchase">Purchase</string>
     <string name="settings">Settings</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="title">Title</string>
     <string name="show_settings">Open settings dialog</string>
     <string name="fontSize">Font size</string>
     <string name="columns">Columns</string>

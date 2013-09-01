@@ -1,5 +1,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:keetab="http://schemas.android.com/apk/res-auto">
+      
+    <item
+        android:id="@+id/fullscreen"
+        android:title="@string/fullscreen" 
+        android:icon="@drawable/fullscreen"
+        keetab:showAsAction="ifRoom"
+    />
     <item
         android:id="@+id/show_settings"
         android:title="@string/settings" 

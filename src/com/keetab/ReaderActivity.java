@@ -13,11 +13,13 @@ import org.readium.sdk.android.components.navigation.NavigationPoint;
 import org.readium.sdk.android.components.navigation.NavigationTable;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -28,6 +30,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
@@ -56,7 +59,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	private static final String TAG = "ReaderActivity";
 	private static final String ASSET_PREFIX = "file:///android_asset/readium-shared-js/";
 	private static final String READER_SKELETON = "file:///android_asset/readium-shared-js/reader.html";
-
+	
 	WebView webview;
 	ImageButton settingsButton;
 	SlidingMenu tocMenu;
@@ -64,6 +67,9 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	Container container;
 	Package pckg;
 	ViewerSettings viewerSettings;
+	ActionBar actionBar;
+	
+	private Boolean inFullscreen = false;
 	
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
@@ -83,7 +89,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	    JSONObject meta = pub.getMeta();
 	    setTitle(meta.get("title").toString());
 	    
-	    final ActionBar actionBar = getSupportActionBar();
+	    actionBar = getSupportActionBar();
 	    String id = meta.get("id").toString();
         String coverURL = Cover.getCoverURL(id, 50, 50);
         ImageLoader.getInstance().loadImage(coverURL, new SimpleImageLoadingListener() {
@@ -109,6 +115,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         ListView tocList = (ListView)tocMenu.findViewById(R.id.tocList);
         NavigationTable toc = pckg.getTableOfContents();
         setListViewContent(tocList, toc);
+
         
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);
@@ -177,11 +184,25 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         if (id == R.id.show_settings) {
             showSettings();
             return true;
+        } else if (id == R.id.fullscreen) {
+            toggleFullscreen();
+            return true;
         } else {
             return super.onOptionsItemSelected(item);
         }
     }
    
+    public void toggleFullscreen() {
+        WindowManager.LayoutParams attrs = getWindow().getAttributes();
+        if (inFullscreen) {
+            attrs.flags &= ~WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            inFullscreen = false;
+        } else {
+            attrs.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            inFullscreen = true;
+        }
+        getWindow().setAttributes(attrs);
+    }
    
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initWebView() {
@@ -219,9 +240,13 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 			openPageLeft();
 		}
 		
-		public void onSwipeDown() {}
+		public void onSwipeDown() {
+		    actionBar.show();
+		}
 		
-		public void onSwipeUp() {}
+		public void onSwipeUp() {
+		    actionBar.hide();
+		}
 	};
 	
 	private void bookmarkCurrentPage() {

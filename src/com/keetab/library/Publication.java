@@ -30,10 +30,8 @@ public class Publication implements Serializable {
 	}
 	
 	public JSONObject getMeta() {
-		if (meta == null) {
-			JSONStorage storage = new JSONStorage();
-			meta = storage.get(Const.PUB_TYPE, id);
-		}
+		JSONStorage storage = new JSONStorage();
+		meta = storage.get(Const.PUB_TYPE, id);
 		return meta;
 	}
 	

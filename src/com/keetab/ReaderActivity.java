@@ -2,10 +2,14 @@ package com.keetab;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.json.JSONException;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.readium.sdk.android.Container;
 import org.readium.sdk.android.Package;
 import org.readium.sdk.android.components.navigation.NavigationElement;
@@ -25,10 +29,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
@@ -43,7 +49,6 @@ import android.widget.ListView;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.keetab.api.Cover;
 import com.keetab.library.Publication;
-import com.keetab.model.BookmarkDatabase;
 import com.keetab.model.Page;
 import com.keetab.model.PaginationInfo;
 import com.keetab.model.ViewerSettings;
@@ -61,7 +66,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	
 	WebView webview;
 	ImageButton settingsButton;
-	SlidingMenu tocMenu;
+	SlidingMenu menus;
+	ListView tocList;
+	ListView bookmarksList;
+	
+	JSONStorage storage;
 	
 	Publication publication;
 	Container container;
@@ -83,6 +92,8 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		webview = (WebView)findViewById(R.id.webview);
 		initWebView();
 	
+		storage = new JSONStorage();
+		
 	    publication = (Publication)getIntent().getSerializableExtra("pub"); 
 	    container = publication.getContainer();
 	    pckg = container.getPackages().get(0);
@@ -105,22 +116,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
             }
         });
 	    
-        
-        tocMenu = new SlidingMenu(this);
-        tocMenu.setMode(SlidingMenu.LEFT);
-        tocMenu.setTouchmodeMarginThreshold(40);
-//        menu.setShadowWidthRes(R.dimen.shadow_width);
-//        menu.setShadowDrawable(R.drawable.shadow);
-//        menu.setBehindOffsetRes(R.dimen.slidingmenu_offset);
-        tocMenu.setBehindOffset(300);
-        tocMenu.setFadeDegree(0.35f);
-        tocMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
-        tocMenu.setMenu(R.layout.toc_list);
-        
-        ListView tocList = (ListView)tocMenu.findViewById(R.id.tocList);
-        NavigationTable toc = pckg.getTableOfContents();
-        setListViewContent(tocList, toc);
-
+        initSlidingMenus();
         
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);
@@ -132,12 +128,120 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		finish();
 	}
 	
-	protected void setListViewContent(ListView view, final NavigationTable navigationTable) {
+	
+	private void initSlidingMenus() {
+        menus = new SlidingMenu(this);
+        menus.setMode(SlidingMenu.LEFT_RIGHT);
+        menus.setTouchmodeMarginThreshold(40);
+        menus.setBehindOffset(300);
+        menus.setFadeDegree(0.35f);
+        menus.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+        menus.setMenu(R.layout.toc_list);
+        menus.setSecondaryMenu(R.layout.bookmarks);
+        
+        tocList = (ListView)menus.findViewById(R.id.tocList);
+        bookmarksList = (ListView)menus.findViewById(R.id.bookmarksList);
+        
+        initTocMenu();
+        initBookmarksMenu();
+	}
+
+	
+	private void initBookmarksMenu() {
+		List<String> titles = getBookmarkTitles();
+		final StringListAdapter bookmarkAdapter = 
+				new StringListAdapter(this, titles);
+		bookmarksList.setAdapter(bookmarkAdapter);
+		
+		final Context context = this;
+		
+		bookmarksList.setOnItemClickListener(
+				new AdapterView.OnItemClickListener() {
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int index, long arg3) {
+						openBookmark(index);
+					}
+		});
+		
+		bookmarksList.setLongClickable(true);
+		bookmarksList.setOnItemLongClickListener(
+			new AdapterView.OnItemLongClickListener() {
+				public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+						final int index, long arg3) {
+					
+					String bookmark = bookmarkAdapter.getItem(index).toString();
+					
+					new AlertDialog.Builder(context)
+					.setMessage("Delete bookmark " + bookmark + "?")
+					.setPositiveButton(android.R.string.yes, 
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								removeBookmark(index);
+								bookmarkAdapter.notifyDataSetChanged();
+							}
+						}
+					)
+					.setNegativeButton(android.R.string.no, null)
+					.show();
+					return true;
+				}
+		});
+	}
+	
+	private JSONArray getBookmarks() {
+		JSONObject meta = publication.getMeta();
+		String bookmarksData = meta.get("bookmarks").toString();
+		try {
+			return (JSONArray)new JSONParser().parse(bookmarksData);
+		} catch (ParseException pe) {
+			return new JSONArray();
+		}
+	}
+	
+	private List<String> getBookmarkTitles() {
+		JSONArray bookmarks = getBookmarks();
+		List<String> titles = new LinkedList<String>();
+		for (Object o : bookmarks) {
+			JSONObject bookmark = (JSONObject)o;
+			String title = (String)bookmark.get("title");
+			if (title != null) {
+				titles.add(title);
+			}
+		}
+		return titles;
+	}
+	
+	private void openBookmark(int index) {
+		JSONArray bookmarks = getBookmarks();
+		try {
+			JSONObject bookmark = (JSONObject)bookmarks.get(index);
+			String idRef = (String)bookmark.get("idref");
+			String elementCfi = (String)bookmark.get("contentCFI");
+			openSpineItemElementCfi(idRef, elementCfi);
+			menus.showContent();
+		} catch (IndexOutOfBoundsException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void removeBookmark(int index) {
+		JSONArray bookmarks = getBookmarks();
+		bookmarks.remove(index);
+		JSONObject meta = publication.getMeta();
+		meta.put("bookmarks", bookmarks);
+		storage.update(meta);
+		updateBookmarks();
+	}
+	
+
+	
+	private void initTocMenu() {
+		final NavigationTable navigationTable = pckg.getTableOfContents();
         List<String> list = flatNavigationTable(navigationTable, new ArrayList<String>(), "");
         final List<NavigationElement> navigationElements = flatNavigationTable(navigationTable, new ArrayList<NavigationElement>());
         StringListAdapter bookListAdapter = new StringListAdapter(this, list);
-        view.setAdapter(bookListAdapter);
-        view.setOnItemClickListener(new ListView.OnItemClickListener() {
+        tocList.setAdapter(bookListAdapter);
+        tocList.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
                     long arg3) {
@@ -147,12 +251,12 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
                     String content = point.getContent();
                     String sourceHref = navigationTable.getSourceHref();
                     openContentUrl(content, sourceHref);
-                    tocMenu.showContent();
+                    menus.showContent();
                 }
             }
         });
     }
-
+	
     private List<String> flatNavigationTable(NavigationElement parent, List<String> list, String shift) {
         String newShift = shift + "   ";
         for (NavigationElement ne : parent.getChildren()) {
@@ -169,6 +273,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         }
         return list;
     }
+	
 	
 	public void showSettings() {
 	    FragmentManager fm = getSupportFragmentManager();
@@ -192,7 +297,10 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.show_settings) {
+        if (id == R.id.bookmark) {
+        	bookmarkCurrentPage();
+        	return true;
+        } else if (id == R.id.show_settings) {
             showSettings();
             return true;
         } else if (id == R.id.fullscreen) {
@@ -373,7 +481,6 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
     public void saveCurrentLocation(String currentPage) {
     	JSONObject meta = publication.getMeta();
     	meta.put("position", currentPage);
-    	JSONStorage storage = new JSONStorage();
     	storage.update(meta);
     }
     
@@ -404,24 +511,49 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	        editText.setHint(R.string.title);
 	        builder.setView(editText);
 	        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					if (which == DialogInterface.BUTTON_POSITIVE) {
 						String title = editText.getText().toString();
-						try {
-							org.json.JSONObject bookmarkJson = new org.json.JSONObject(bookmarkData);
-							BookmarkDatabase.getInstance().addBookmark(container.getName(), title,
-									bookmarkJson.getString("idref"), bookmarkJson.getString("contentCFI"));
-						} catch (JSONException e) {
-							Log.e(TAG, ""+e.getMessage(), e);
-						}
+						saveBookmark(title, bookmarkData);
 					}
 				}
 			});
 	        builder.setNegativeButton(android.R.string.cancel, null);
 	        builder.show();
 		}
+		
+		public void saveBookmark(String title, String bookmarkData) {
+			try {
+				JSONParser p = new JSONParser();
+				JSONObject bookmark = (JSONObject)p.parse(bookmarkData);
+				bookmark.put("title", title);
+				
+				JSONObject meta = publication.getMeta();
+				JSONArray bookmarks;
+				if (meta.containsKey("bookmarks")) {
+					String bookmarksData = meta.get("bookmarks").toString();
+					bookmarks = (JSONArray)p.parse(bookmarksData);
+				} else {
+					bookmarks = new JSONArray();
+				}
+				
+				bookmarks.add(bookmark);
+				
+				meta.put("bookmarks", bookmarks.toJSONString());
+				storage.update(meta);
+				updateBookmarks();
+			} catch (ParseException pe) {
+				pe.printStackTrace();
+			}
+		}
+	}
+	
+	public void updateBookmarks() {
+		ListView list = (ListView)menus.findViewById(R.id.bookmarksList);
+		List<String> titles = getBookmarkTitles();
+		StringListAdapter adapter = (StringListAdapter)list.getAdapter();
+		adapter.changeData(titles);
 	}
 
 }

@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 public class StringListAdapter extends BaseAdapter {
 	
-	private final List<String> mData;
 	private final Context context;
+	private List<String> mData;
 	
 	public StringListAdapter(Context context, List<String> list) {
 		this.mData = list;
@@ -22,6 +22,11 @@ public class StringListAdapter extends BaseAdapter {
 	@Override
 	public int getCount() {
 		return mData.size();
+	}
+	
+	public void changeData(List<String> data) {
+		mData = data;
+		//notifyDataSetChanged();
 	}
 
 	@Override

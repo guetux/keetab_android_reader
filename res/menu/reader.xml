@@ -1,6 +1,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:keetab="http://schemas.android.com/apk/res-auto">
-      
+
+    <item
+        android:id="@+id/bookmark"
+        android:title="@string/bookmark" 
+        android:icon="@drawable/bookmark"
+        keetab:showAsAction="ifRoom"
+    />
     <item
         android:id="@+id/fullscreen"
         android:title="@string/fullscreen" 

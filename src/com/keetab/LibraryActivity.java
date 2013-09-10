@@ -1,5 +1,7 @@
 package com.keetab;
 
+import org.readium.sdk.android.EPub3;
+
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,15 +14,17 @@ import com.keetab.library.Library;
 import com.keetab.library.Publication;
 
 public class LibraryActivity extends ListActivity {
-	
+
 	Library library = new Library();
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		EPub3.setCachePath(getCacheDir().getAbsolutePath());
 		
 		setContentView(R.layout.activtity_library);
-		
+
 		PublicationAdapter adapter = new PublicationAdapter(library.asArray());
 		setListAdapter(adapter);
 	}
@@ -33,7 +37,7 @@ public class LibraryActivity extends ListActivity {
 		intent.putExtra("pub", pub);
 		startActivity(intent);
 	}
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.library, menu);
@@ -48,7 +52,7 @@ public class LibraryActivity extends ListActivity {
 			startActivity(intent);
 			return true;
 		} else {
-	        return super.onOptionsItemSelected(item);
-	    }
+			return super.onOptionsItemSelected(item);
+		}
 	}
 }

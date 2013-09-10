@@ -40,7 +40,8 @@ public class Publication implements Serializable {
 	public Container getContainer() {
 		File libraryDir = DirectoryManager.getLibraryDir();
 		File epub = new File(libraryDir, fileName);
-        Container container = EPub3.openBook(epub.getAbsolutePath());
+		String path = epub.getAbsolutePath();
+        Container container = EPub3.openBook(path);
         
         return container;
 	}

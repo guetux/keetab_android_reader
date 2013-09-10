@@ -7,19 +7,20 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.simple.JSONObject;
 import org.readium.sdk.android.Container;
+import org.readium.sdk.android.ManifestItem;
 import org.readium.sdk.android.Package;
+import org.readium.sdk.android.SpineItem;
 import org.readium.sdk.android.components.navigation.NavigationElement;
 import org.readium.sdk.android.components.navigation.NavigationPoint;
 import org.readium.sdk.android.components.navigation.NavigationTable;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.media.MediaPlayer;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -39,15 +40,17 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.VideoView;
 
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.keetab.api.Cover;
 import com.keetab.library.Publication;
 import com.keetab.model.BookmarkDatabase;
-import com.keetab.model.Page;
-import com.keetab.model.PaginationInfo;
+import com.keetab.model.OpenPageRequest;
+import com.keetab.model.ReadiumJSApi;
 import com.keetab.model.ViewerSettings;
 import com.keetab.util.StringListAdapter;
 import com.keetab.util.TouchListener;
@@ -66,7 +69,9 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	
 	Container container;
 	Package pckg;
+	OpenPageRequest openPageRequest;
 	ViewerSettings viewerSettings;
+	ReadiumJSApi readiumJSApi;
 	ActionBar actionBar;
 	
 	private Boolean inFullscreen = false;
@@ -84,7 +89,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	
 	    Publication pub = (Publication)getIntent().getSerializableExtra("pub"); 
 	    container = pub.getContainer();
-	    pckg = container.getPackages().get(0);
+	    pckg = container.getDefaultPackage();
+	    
+	    // Open first page
+	    SpineItem spineItem = pckg.getSpineItems().get(0);
+	    openPageRequest = OpenPageRequest.fromIdref(spineItem.getIdRef());
 	    
 	    JSONObject meta = pub.getMeta();
 	    setTitle(meta.get("title").toString());
@@ -119,6 +128,12 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);
+		readiumJSApi = new ReadiumJSApi(new ReadiumJSApi.JSLoader() {
+			@Override
+			public void loadJS(String javascript) {
+				webview.loadUrl(javascript);
+			}
+		});
 	}
 	
 	protected void setListViewContent(ListView view, final NavigationTable navigationTable) {
@@ -135,7 +150,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
                     NavigationPoint point = (NavigationPoint) navigation;
                     String content = point.getContent();
                     String sourceHref = navigationTable.getSourceHref();
-                    openContentUrl(content, sourceHref);
+                    readiumJSApi.openContentUrl(content, sourceHref);
                     tocMenu.showContent();
                 }
             }
@@ -171,6 +186,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
     public void onViewerSettingsChange(ViewerSettings viewerSettings) {
         updateSettings(viewerSettings);
     }
+
+    private void updateSettings(ViewerSettings viewerSettings) {
+        this.viewerSettings = viewerSettings;
+        readiumJSApi.updateSettings(viewerSettings);
+    }
 	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -204,11 +224,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         getWindow().setAttributes(attrs);
     }
    
+	@SuppressWarnings("deprecation")
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initWebView() {
 		webview.getSettings().setJavaScriptEnabled(true);
 		webview.getSettings().setAllowUniversalAccessFromFileURLs(true);
-
 		webview.getSettings().setLightTouchEnabled(true);
 		webview.getSettings().setPluginState(WebSettings.PluginState.ON);
 		webview.setWebViewClient(new EpubWebViewClient());
@@ -225,19 +245,19 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		}
 
 		public void onSwipeRight() {
-			openPageRight();
+			readiumJSApi.openPageRight();
 		}
 		
 		public void rightTap() {
-			openPageRight();
+			readiumJSApi.openPageRight();
 		}
 		
 		public void onSwipeLeft() {
-			openPageLeft();
+			readiumJSApi.openPageLeft();
 		}
 		
 		public void leftTap() {
-			openPageLeft();
+			readiumJSApi.openPageLeft();
 		}
 		
 		public void onSwipeDown() {
@@ -248,59 +268,8 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		    actionBar.hide();
 		}
 	};
-	
-	private void bookmarkCurrentPage() {
-		loadJS("window.LauncherUI.getBookmarkData(ReadiumSDK.reader.bookmarkCurrentPage());");
-	}
-	
-	private void openPageLeft() {
-		loadJS("ReadiumSDK.reader.openPageLeft();");
-	}
-	
-	private void openPageRight() {
-		loadJS("ReadiumSDK.reader.openPageRight();");
-	}
-	
-	private void openBook(String packageData) {
-		Log.i(TAG, "packageData: "+packageData);
-		loadJSOnReady("ReadiumSDK.reader.openBook("+packageData+");");
-	}
-	
-	private void openBook(String packageData, String openPageRequest) {
-		Log.i(TAG, "packageData: "+packageData);
-		loadJSOnReady("ReadiumSDK.reader.openBook("+packageData+", "+openPageRequest+");");
-	}
-	
-    private void updateSettings(ViewerSettings viewerSettings) {
-        Log.i(TAG, "viewerSettings: "+viewerSettings);
-        this.viewerSettings = viewerSettings;
-        try {
-            loadJSOnReady("ReadiumSDK.reader.updateSettings("+viewerSettings.toJSON().toString()+");");
-        } catch (JSONException e) {
-            Log.e(TAG, ""+e.getMessage(), e);
-        }
-    }
-	
-	private void openContentUrl(String href, String baseUrl) {
-		loadJSOnReady("ReadiumSDK.reader.openContentUrl(\""+href+"\", \""+baseUrl+"\");");
-	}
-	
-	private void openSpineItemPage(String idRef, int page) {
-		loadJSOnReady("ReadiumSDK.reader.openSpineItemPage(\""+idRef+"\", "+page+");");
-	}
-
-	private void openSpineItemElementCfi(String idRef, String elementCfi) {
-		loadJSOnReady("ReadiumSDK.reader.openSpineItemElementCfi(\""+idRef+"\",\""+elementCfi+"\");");
-	}
-
-    private void loadJSOnReady(String jScript) {
-        loadJS("$(document).ready(function () {" + jScript + "});");
-    }
-
-    private void loadJS(String jScript) {
-        webview.loadUrl("javascript:(function(){" + jScript + "})()");
-    }
     
+
     public final class EpubWebViewClient extends WebViewClient {
     	
         @Override
@@ -312,8 +281,8 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         public void onPageFinished(WebView view, String url) {
         	Log.i(TAG, "onPageFinished: "+url);
         	if (url.equals(READER_SKELETON)) {
-        	    openBook(pckg.toJSON());
-        	    updateSettings(viewerSettings);
+        	    readiumJSApi.openBook(pckg, viewerSettings, openPageRequest);
+        	    readiumJSApi.loadJSOnReady("console.log('ready')");
         	}
         }
         
@@ -337,10 +306,8 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         	Log.i(TAG, "shouldInterceptRequest ? "+url);
-
-            byte[] data = pckg.getContent(cleanResourceUrl(url));
-        	//Log.i(TAG, "data : "+new String(data));
-            // TODO Pass the correct mimetype
+        	String cleanedUrl = cleanResourceUrl(url);
+            byte[] data = pckg.getContent(cleanedUrl);
         	return new WebResourceResponse(null, "utf-8", new ByteArrayInputStream(data));
         }
         
@@ -351,20 +318,46 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         }
     }
     
-    public class EpubWebChromeClient extends WebChromeClient {
+    public class EpubWebChromeClient extends WebChromeClient implements
+    	MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
+    	public void onShowCustomView(View view, CustomViewCallback callback) {
+			Log.d(TAG, "here in on ShowCustomView: " + view);
+			super.onShowCustomView(view, callback);
+			if (view instanceof FrameLayout) {
+				FrameLayout frame = (FrameLayout) view;
+				Log.d(TAG, "frame.getFocusedChild(): " + frame.getFocusedChild());
+				if (frame.getFocusedChild() instanceof VideoView) {
+					VideoView video = (VideoView) frame.getFocusedChild();
+					// frame.removeView(video);
+					// a.setContentView(video);
+					video.setOnCompletionListener(this);
+					video.setOnErrorListener(this);
+					video.start();
+				}
+			}
+		}
+    	
+    	public void onCompletion(MediaPlayer mp) {
+			Log.d(TAG, "Video completed");
+		}
+
+		@Override
+		public boolean onError(MediaPlayer mp, int what, int extra) {
+			Log.d(TAG, "MediaPlayer onError: " + what + ", " + extra);
+			return false;
+		}
 
 	}
     
 	public class EpubInterface {
 		@JavascriptInterface
 		public void onPaginationChanged(String currentPagesInfo) {
-			try {
-				PaginationInfo paginationInfo = PaginationInfo.fromJson(currentPagesInfo);
-				List<Page> openPages = paginationInfo.getOpenPages();
-				// Thank you but we're not interested
-			} catch (JSONException e) {
-				Log.e(TAG, ""+e.getMessage(), e);
-			}
+			// Thank you but we're not interested
+		}
+		
+		@JavascriptInterface
+		public void onSettingsApplied() {
+			Log.d(TAG, "onSettingsApplied");
 		}
 		
 		@JavascriptInterface

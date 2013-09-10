@@ -1,18 +1,14 @@
 package com.keetab.model;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
-
 public class PaginationInfo {
 
-	private static final String TAG = "PaginationInfo";
 	private final String pageProgressionDirection;
 	private final boolean isFixedLayout;
 	private final int spineItemCount;

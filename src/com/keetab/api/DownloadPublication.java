@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 
 import com.keetab.AppContext;
+import com.keetab.Const;
 import com.keetab.util.DirectoryManager;
 import com.keetab.util.JSONStorage;
 
@@ -87,7 +88,7 @@ public class DownloadPublication implements Runnable {
 	
     public void addProductToLibrary(JSONObject product, File epub) {
         JSONStorage storage = new JSONStorage();
-        storage.add("publications", product);
+        storage.add(Const.PUB_TYPE, product);
     }
 
     private String getAssetUrlByType(JSONObject product, String type) {

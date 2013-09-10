@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import org.readium.sdk.android.Container;
 import org.readium.sdk.android.EPub3;
 
+import com.keetab.Const;
 import com.keetab.util.DirectoryManager;
 import com.keetab.util.JSONStorage;
 
@@ -31,7 +32,7 @@ public class Publication implements Serializable {
 	public JSONObject getMeta() {
 		if (meta == null) {
 			JSONStorage storage = new JSONStorage();
-			meta = storage.get("publications", id);
+			meta = storage.get(Const.PUB_TYPE, id);
 		}
 		return meta;
 	}

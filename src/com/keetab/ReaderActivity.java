@@ -13,13 +13,11 @@ import org.readium.sdk.android.components.navigation.NavigationPoint;
 import org.readium.sdk.android.components.navigation.NavigationTable;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -49,6 +47,7 @@ import com.keetab.model.BookmarkDatabase;
 import com.keetab.model.Page;
 import com.keetab.model.PaginationInfo;
 import com.keetab.model.ViewerSettings;
+import com.keetab.util.JSONStorage;
 import com.keetab.util.StringListAdapter;
 import com.keetab.util.TouchListener;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -64,8 +63,10 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	ImageButton settingsButton;
 	SlidingMenu tocMenu;
 	
+	Publication publication;
 	Container container;
 	Package pckg;
+	String openPageRequest;
 	ViewerSettings viewerSettings;
 	ActionBar actionBar;
 	
@@ -82,12 +83,16 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		webview = (WebView)findViewById(R.id.webview);
 		initWebView();
 	
-	    Publication pub = (Publication)getIntent().getSerializableExtra("pub"); 
-	    container = pub.getContainer();
+	    publication = (Publication)getIntent().getSerializableExtra("pub"); 
+	    container = publication.getContainer();
 	    pckg = container.getPackages().get(0);
 	    
-	    JSONObject meta = pub.getMeta();
+	    JSONObject meta = publication.getMeta();
 	    setTitle(meta.get("title").toString());
+	    
+		if (meta.containsKey("position")) {
+			openPageRequest = meta.get("position").toString();
+		}
 	    
 	    actionBar = getSupportActionBar();
 	    String id = meta.get("id").toString();
@@ -119,6 +124,12 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         
 		webview.loadUrl(READER_SKELETON);
 		viewerSettings = new ViewerSettings(false, 100, 20);
+	}
+	
+	@Override
+	public void onBackPressed() {
+		loadJS("window.LauncherUI.getCurrentPage(ReadiumSDK.reader.bookmarkCurrentPage());");
+		finish();
 	}
 	
 	protected void setListViewContent(ListView view, final NavigationTable navigationTable) {
@@ -312,7 +323,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         public void onPageFinished(WebView view, String url) {
         	Log.i(TAG, "onPageFinished: "+url);
         	if (url.equals(READER_SKELETON)) {
-        	    openBook(pckg.toJSON());
+        		if (openPageRequest != null) {
+        			openBook(pckg.toJSON(), openPageRequest);
+        		} else {
+        			openBook(pckg.toJSON());
+        		}
         	    updateSettings(viewerSettings);
         	}
         }
@@ -355,6 +370,13 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 
 	}
     
+    public void saveCurrentLocation(String currentPage) {
+    	JSONObject meta = publication.getMeta();
+    	meta.put("position", currentPage);
+    	JSONStorage storage = new JSONStorage();
+    	storage.update(meta);
+    }
+    
 	public class EpubInterface {
 		@JavascriptInterface
 		public void onPaginationChanged(String currentPagesInfo) {
@@ -365,6 +387,11 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 			} catch (JSONException e) {
 				Log.e(TAG, ""+e.getMessage(), e);
 			}
+		}
+		
+		@JavascriptInterface
+		public void getCurrentPage(final String currentPage) {
+			saveCurrentLocation(currentPage);
 		}
 		
 		@JavascriptInterface

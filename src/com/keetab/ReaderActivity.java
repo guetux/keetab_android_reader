@@ -29,12 +29,10 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
@@ -75,7 +73,6 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	Publication publication;
 	Container container;
 	Package pckg;
-	String openPageRequest;
 	ViewerSettings viewerSettings;
 	ActionBar actionBar;
 	
@@ -101,10 +98,6 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	    JSONObject meta = publication.getMeta();
 	    setTitle(meta.get("title").toString());
 	    
-		if (meta.containsKey("position")) {
-			openPageRequest = meta.get("position").toString();
-		}
-	    
 	    actionBar = getSupportActionBar();
 	    String id = meta.get("id").toString();
         String coverURL = Cover.getCoverURL(id, 50, 50);
@@ -125,7 +118,6 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	@Override
 	public void onBackPressed() {
 		loadJS("window.LauncherUI.getCurrentPage(ReadiumSDK.reader.bookmarkCurrentPage());");
-		finish();
 	}
 	
 	
@@ -431,7 +423,9 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
         public void onPageFinished(WebView view, String url) {
         	Log.i(TAG, "onPageFinished: "+url);
         	if (url.equals(READER_SKELETON)) {
-        		if (openPageRequest != null) {
+        		JSONObject meta = publication.getMeta();
+        		if (meta.containsKey("position")) {
+        			String openPageRequest = meta.get("position").toString();
         			openBook(pckg.toJSON(), openPageRequest);
         		} else {
         			openBook(pckg.toJSON());
@@ -482,6 +476,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
     	JSONObject meta = publication.getMeta();
     	meta.put("position", currentPage);
     	storage.update(meta);
+		finish();
     }
     
 	public class EpubInterface {

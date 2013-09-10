@@ -7,13 +7,15 @@ import com.keetab.util.DirectoryManager;
 
 public class Library {
 	
-	public List<Publication> publications = new LinkedList<Publication>();
+	public List<Publication> publications;
 	
 	public Library() {
 		loadLibrary();
 	}
 	
-	private void loadLibrary() {
+	public void loadLibrary() {
+		publications = new LinkedList<Publication>();
+		
 		String[] files = DirectoryManager.getLibraryDir().list();
 		for (String fileName : files) {
 			if (fileName.endsWith(".epub")) {

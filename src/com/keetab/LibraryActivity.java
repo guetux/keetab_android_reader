@@ -26,6 +26,12 @@ public class LibraryActivity extends ListActivity {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		library.loadLibrary();
+	}
+	
+	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Publication pub = library.findByIndex(position);

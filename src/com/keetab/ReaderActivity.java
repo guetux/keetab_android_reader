@@ -47,8 +47,6 @@ import android.widget.ListView;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.keetab.api.Cover;
 import com.keetab.library.Publication;
-import com.keetab.model.Page;
-import com.keetab.model.PaginationInfo;
 import com.keetab.model.ViewerSettings;
 import com.keetab.util.JSONStorage;
 import com.keetab.util.StringListAdapter;
@@ -76,6 +74,7 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	ViewerSettings viewerSettings;
 	ActionBar actionBar;
 	
+	private Boolean lastPositionOpened = false;
 	private Boolean inFullscreen = false;
 	
 	@SuppressLint("SetJavaScriptEnabled")
@@ -116,8 +115,15 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 	}
 	
 	@Override
-	public void onBackPressed() {
-		loadJS("window.LauncherUI.getCurrentPage(ReadiumSDK.reader.bookmarkCurrentPage());");
+	public void onPause() {
+		super.onPause();
+		savePosition();
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		savePosition();
 	}
 	
 	
@@ -360,6 +366,10 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
 		}
 	};
 	
+	private void savePosition() {
+		loadJS("window.LauncherUI.getCurrentPage(ReadiumSDK.reader.bookmarkCurrentPage());");
+	}
+	
 	private void bookmarkCurrentPage() {
 		loadJS("window.LauncherUI.getBookmarkData(ReadiumSDK.reader.bookmarkCurrentPage());");
 	}
@@ -476,19 +486,27 @@ public class ReaderActivity extends ActionBarActivity implements ViewerSettingsD
     	JSONObject meta = publication.getMeta();
     	meta.put("position", currentPage);
     	storage.update(meta);
-		finish();
     }
     
 	public class EpubInterface {
 		@JavascriptInterface
 		public void onPaginationChanged(String currentPagesInfo) {
-			try {
-				PaginationInfo paginationInfo = PaginationInfo.fromJson(currentPagesInfo);
-				List<Page> openPages = paginationInfo.getOpenPages();
-				// Thank you but we're not interested
-			} catch (JSONException e) {
-				Log.e(TAG, ""+e.getMessage(), e);
-			}
+			if (lastPositionOpened) return;
+			
+    		JSONObject meta = publication.getMeta();
+    		if (meta.containsKey("position")) {
+    			String pos = meta.get("position").toString();
+    			try {
+    				JSONObject p = (JSONObject)new JSONParser().parse(pos);
+    				String idRef = (String)p.get("idref");
+    				String elementCfi = (String)p.get("contentCFI");
+    				openSpineItemElementCfi(idRef, elementCfi);
+    			} catch (ParseException e) {}
+        		meta.remove("position");
+        		storage.update(meta);
+    		}
+    		
+    		lastPositionOpened = true;
 		}
 		
 		@JavascriptInterface
